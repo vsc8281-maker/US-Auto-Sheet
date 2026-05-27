@@ -5,6 +5,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import os
 import json
+import requests
+import io
 
 # 1. Credentials Setup
 creds_json = os.environ.get('GCP_CREDENTIALS')
@@ -31,7 +33,12 @@ except Exception as e:
 print("S&P 500 स्टॉक्स की लिस्ट निकाल रहे हैं...")
 try:
     url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    tickers = pd.read_html(url)[0]['Symbol'].str.replace('.', '-').tolist()
+    # Wikipedia को ब्लॉक करने से रोकने के लिए User-Agent लगा रहे हैं
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    response = requests.get(url, headers=headers, timeout=15)
+    
+    # HTML से टेबल पढ़ना
+    tickers = pd.read_html(io.StringIO(response.text))[0]['Symbol'].str.replace('.', '-').tolist()
     
     print("Yahoo Finance से लाइव डेटा डाउनलोड हो रहा है (इसमें 1-2 मिनट लग सकते हैं)...")
     # yfinance से आज का डेटा लाना
